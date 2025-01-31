@@ -38,6 +38,13 @@
 	--button-border:1px solid #ffffff;
 }
 
+/* Resumé */
+.button-resum- {
+    --button-text: #ffffff;
+    --button-background: #a63030;
+    --button-border: 1px solid #FFFFFF;
+}
+
 /* Blog */
 .button-blog {
     --button-text: #ffffff;
