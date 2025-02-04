@@ -38,7 +38,9 @@
 
 <body>
 
+  <canvas id="neuralCanvas"></canvas>
     <div class="container">
+
         <div class="column">
 
             <!-- 
@@ -88,6 +90,116 @@
     </div>
   </div>
 
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const canvas = document.getElementById("neuralCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const nodes = [];
+  const mouse = { x: null, y: null, radius: 150 };
+
+  // Crear nodos aleatorios
+  const numNodes = 120;
+  for (let i = 0; i < numNodes; i++) {
+    nodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 3 + 1,
+      dx: Math.random() * 2 - 1,
+      dy: Math.random() * 2 - 1,
+    });
+  }
+
+  // Dibujar nodos y conexiones
+  function drawNodes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < nodes.length; i++) {
+      let node = nodes[i];
+
+      // Dibujar nodo fluorescente
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#00ff99"; // Verde neón
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "#00ff99";
+      ctx.fill();
+      ctx.closePath();
+
+      // Mover nodo
+      node.x += node.dx;
+      node.y += node.dy;
+
+      // Rebote en los bordes
+      if (node.x <= 0 || node.x >= canvas.width) node.dx *= -1;
+      if (node.y <= 0 || node.y >= canvas.height) node.dy *= -1;
+
+      // Dibujar conexiones entre nodos cercanos
+      for (let j = i + 1; j < nodes.length; j++) {
+        let node2 = nodes[j];
+        let dist = Math.hypot(node.x - node2.x, node.y - node2.y);
+
+        if (dist < 130) {
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(node2.x, node2.y);
+          ctx.strokeStyle = `rgba(0, 255, 255, ${1 - dist / 130})`; // Cian eléctrico
+          ctx.lineWidth = 0.7;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = "#00ffff"; // Efecto glow cian
+          ctx.stroke();
+          ctx.closePath();
+        }
+      }
+    }
+  }
+
+  // Detectar el mouse y conectar con los nodos cercanos
+  window.addEventListener("mousemove", (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function connectMouse() {
+    if (!mouse.x || !mouse.y) return;
+
+    for (let i = 0; i < nodes.length; i++) {
+      let node = nodes[i];
+      let dist = Math.hypot(mouse.x - node.x, mouse.y - node.y);
+
+      if (dist < mouse.radius) {
+        ctx.beginPath();
+        ctx.moveTo(mouse.x, mouse.y);
+        ctx.lineTo(node.x, node.y);
+        ctx.strokeStyle = `rgba(0, 255, 0, ${1 - dist / mouse.radius})`; // Verde neón cuando toca el mouse
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#00ff00"; // Glow verde más intenso
+        ctx.stroke();
+        ctx.closePath();
+      }
+    }
+  }
+
+  function animate() {
+    drawNodes();
+    connectMouse();
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Ajustar tamaño del canvas en resize
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+});
+
+  </script>
 </body>
 
 </html>
