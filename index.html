@@ -99,57 +99,56 @@ document.addEventListener("DOMContentLoaded", function () {
   canvas.height = window.innerHeight;
 
   const nodes = [];
-  const mouse = { x: null, y: null, radius: 150 };
+  const mouse = { x: null, y: null, radius: 100 };
+  let lastMouseMove = 0;
 
-  // Crear nodos aleatorios
-  const numNodes = 120;
+  // Determinar el número de nodos según el tamaño de pantalla
+  const isMobile = window.innerWidth < 768;
+  const numNodes = isMobile ? 50 : 120; // Menos nodos en móviles
+
   for (let i = 0; i < numNodes; i++) {
     nodes.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 3 + 1,
-      dx: Math.random() * 2 - 1,
-      dy: Math.random() * 2 - 1,
+      radius: Math.random() * 2 + 1,
+      dx: Math.random() * 1.5 - 0.75,
+      dy: Math.random() * 1.5 - 0.75,
     });
   }
 
-  // Dibujar nodos y conexiones
   function drawNodes() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < nodes.length; i++) {
       let node = nodes[i];
 
-      // Dibujar nodo fluorescente
+      // Dibujar nodo con brillo reducido en móviles
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = "#00ff99"; // Verde neón
-      ctx.shadowBlur = 15;
+      ctx.fillStyle = "#00ff99";
+      ctx.shadowBlur = isMobile ? 5 : 15;
       ctx.shadowColor = "#00ff99";
       ctx.fill();
       ctx.closePath();
 
-      // Mover nodo
       node.x += node.dx;
       node.y += node.dy;
 
-      // Rebote en los bordes
       if (node.x <= 0 || node.x >= canvas.width) node.dx *= -1;
       if (node.y <= 0 || node.y >= canvas.height) node.dy *= -1;
 
-      // Dibujar conexiones entre nodos cercanos
       for (let j = i + 1; j < nodes.length; j++) {
         let node2 = nodes[j];
         let dist = Math.hypot(node.x - node2.x, node.y - node2.y);
 
-        if (dist < 130) {
+        if (dist < (isMobile ? 80 : 130)) {
           ctx.beginPath();
           ctx.moveTo(node.x, node.y);
           ctx.lineTo(node2.x, node2.y);
-          ctx.strokeStyle = `rgba(0, 255, 255, ${1 - dist / 130})`; // Cian eléctrico
-          ctx.lineWidth = 0.7;
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = "#00ffff"; // Efecto glow cian
+          ctx.strokeStyle = `rgba(0, 255, 255, ${1 - dist / 130})`;
+          ctx.lineWidth = isMobile ? 0.5 : 0.7;
+          ctx.shadowBlur = isMobile ? 3 : 10;
+          ctx.shadowColor = "#00ffff";
           ctx.stroke();
           ctx.closePath();
         }
@@ -157,12 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Detectar el mouse y conectar con los nodos cercanos
-  window.addEventListener("mousemove", (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-
+  // Conectar con el mouse (con throttle)
   function connectMouse() {
     if (!mouse.x || !mouse.y) return;
 
@@ -174,31 +168,37 @@ document.addEventListener("DOMContentLoaded", function () {
         ctx.beginPath();
         ctx.moveTo(mouse.x, mouse.y);
         ctx.lineTo(node.x, node.y);
-        ctx.strokeStyle = `rgba(0, 255, 0, ${1 - dist / mouse.radius})`; // Verde neón cuando toca el mouse
-        ctx.lineWidth = 1.5;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "#00ff00"; // Glow verde más intenso
+        ctx.strokeStyle = `rgba(0, 255, 0, ${1 - dist / mouse.radius})`;
+        ctx.lineWidth = 1.2;
+        ctx.shadowBlur = isMobile ? 5 : 20;
+        ctx.shadowColor = "#00ff00";
         ctx.stroke();
         ctx.closePath();
       }
     }
   }
 
+  window.addEventListener("mousemove", (e) => {
+    if (Date.now() - lastMouseMove > 50) { // Reduce la carga en el evento
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      lastMouseMove = Date.now();
+    }
+  });
+
   function animate() {
     drawNodes();
     connectMouse();
-    requestAnimationFrame(animate);
+    setTimeout(() => requestAnimationFrame(animate), isMobile ? 40 : 16); // Control de FPS
   }
 
   animate();
 
-  // Ajustar tamaño del canvas en resize
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
 });
-
   </script>
 </body>
 
